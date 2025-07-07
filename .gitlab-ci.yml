@@ -1,0 +1,30 @@
+# Example GitLab CI/CD configuration for testing an API with pytest and generating reports
+# This configuration assumes you have pytest and allure installed in your Python environment.
+# Require docker runner with internet access to run tests against the API.
+
+stages:
+  - test
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  REPORTS_DIR: "$CI_PROJECT_DIR/reports"
+
+test_api:
+  tags:
+    - docker
+  stage: test
+  image: python:3.13-slim
+  before_script:
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+  script:
+    - pytest -v tests/ --html=$REPORTS_DIR/pytest-report.html --self-contained-html --junitxml=$REPORTS_DIR/pytest-report.xml --alluredir=$REPORTS_DIR/allure-results || true
+  artifacts:
+    when: always
+    paths:
+      - $REPORTS_DIR/pytest-report.html
+      - $REPORTS_DIR/pytest-report.xml
+      - $REPORTS_DIR/allure-results/
+    reports:
+      junit: $REPORTS_DIR/pytest-report.xml
+    expire_in: 7d
